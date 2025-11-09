@@ -1,2 +1,2 @@
-# TP-1-ALG
-EU POSSO PROGRAMAR EM PYTHON?!?! #blessed
+# TP-2-ALG
+Primeiro vieram os caminhos, agora só lido com triângulos
