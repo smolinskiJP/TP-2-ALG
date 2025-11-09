@@ -1,0 +1,2 @@
+# TP-1-ALG
+EU POSSO PROGRAMAR EM PYTHON?!?! #blessed
