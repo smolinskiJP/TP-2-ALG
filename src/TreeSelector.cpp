@@ -13,7 +13,7 @@ void Result::update(Point a, Point b, Point c, double p){
         (id[0] == this->t1 && id[1] == this->t2 && id[2] < this->t3)
     );
     
-    if(p < this->perim || firstLexicographical){
+    if(p < this->perim || (firstLexicographical && std::abs(p - this->perim) < 1e-9)){
         this->perim = p;
         this->t1 = id[0];
         this->t2 = id[1];
