@@ -36,7 +36,7 @@ TreeSelector::TreeSelector(int z) : _z(z){
 
 TreeSelector::~TreeSelector(){}
 
-Result TreeSelector::smallestPerim(std::vector<Point>& Px, int l, int r){
+Result TreeSelector::smallestPerim(std::vector<Point>& Px, std::vector<Point>& Py, int l, int r){
     int size = r - l + 1;
     Result result;
 
@@ -57,8 +57,19 @@ Result TreeSelector::smallestPerim(std::vector<Point>& Px, int l, int r){
     int mid = l + (size / 2);
     Point median = Px[mid];
 
-    Result leftResult = smallestPerim(Px, l, mid);
-    Result rightResult = smallestPerim(Px, mid + 1, r);
+    std::vector<Point> PyLeft, PyRight;
+
+    for(Point p : Py){
+        if(p.x < median.x) PyLeft.push_back(p);
+        else if(p.x > median.x) PyRight.push_back(p);
+        else{
+            if(PyLeft.size() < (size_t)(mid - l + 1)) PyLeft.push_back(p);
+            else PyRight.push_back(p);
+        }
+    }
+
+    Result leftResult = smallestPerim(Px, PyLeft, l, mid);
+    Result rightResult = smallestPerim(Px, PyRight, mid + 1, r);
 
     //Pega o menor perimetro entre as duas partes
     bool leftFirstLexic = (
@@ -78,14 +89,10 @@ Result TreeSelector::smallestPerim(std::vector<Point>& Px, int l, int r){
     //Agora devemos lidar com o caso de triangulos que cruzam o X mediano. Ou seja, que tem 2 pontos de um lado ou de outro
     //Sabemos o melhor perimetro ate agora, fica evidente que qualquer ponto a uma distancia do X mediano de mais de (perim / 2) nao vai participar desse triangulo
     //Entao devemos limitar o range em que os pontos serao comparados
-
+    
+    //Seleciona em Py, os que estao no "range"
     std::vector<Point> rangeTrees;
-    for(int i = l; i <= r; i++) if(std::abs(Px[i].x - median.x) < perim / 2.0) rangeTrees.push_back(Px[i]);
-
-    //Ordena em relacao a Y
-    std::sort(rangeTrees.begin(), rangeTrees.end(), [](const Point& a, const Point& b){
-        return a.y < b.y;
-    });
+    for(Point p : Py) if(p.x - median.x < perim / 2.0) rangeTrees.push_back(p);
     
     //Verificar os triangulos dentro do range
     for(size_t i = 0; i < rangeTrees.size(); i++){
@@ -112,8 +119,16 @@ void TreeSelector::Run(){
         return a.x < b.x;
     });
 
+    //Ordena por Y previamente tambem. Isso diminui o custo do passo futuro de orndenar por Y cada subvetor da recursao
+    //A ordenacao por Y foi feita para que se a diferenca vertical entre 2 pontos for maior do que metade do menor perimetro encontrado, nenhum "menor triangulo" vai ser formado com essa reta
+    //Ordenado, para cada ponto, no momento em que a distancia vertical for maior do que metade do perimetro, nenhum proximo ponto tera distancia vertical menor.
+    std::vector<Point> Py = this->_trees;
+    std::sort(Py.begin(), Py.end(), [](const Point& a, const Point& b){
+        return a.y < b.y;
+    });
+
     //Primeira chamada para a divisao e conquista
-    this->_resultado =  smallestPerim(this->_trees, 0, this->_z - 1);
+    this->_resultado =  smallestPerim(this->_trees, Py, 0, this->_z - 1);
     std::cout << std::fixed << std::setprecision(4);
     std::cout << "Parte 2: " << this->_resultado.perim << " " << this->_resultado.t1 << " " << this->_resultado.t2 << " " << this->_resultado.t3 << "\n";
 }

@@ -34,8 +34,7 @@ class TreeSelector{
 
         double perimeter(Point a, Point b, Point c);
         double dist(Point a, Point b);
-        Result smallestPerim(std::vector<Point>& Px, int l, int r);
-        void updateResult(Point a, Point b, Point c, double p);
+        Result smallestPerim(std::vector<Point>& Px, std::vector<Point>& Py, int l, int r);
     public:
         TreeSelector(int z);
         ~TreeSelector();
