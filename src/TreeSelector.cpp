@@ -1,5 +1,6 @@
 #include "TreeSelector.hpp"
 
+//Atualiza o valor de um Resultado de acordo com outros pontos
 void Result::update(Point a, Point b, Point c, double p){
     if(p == INF) return;
 
@@ -7,12 +8,14 @@ void Result::update(Point a, Point b, Point c, double p){
     int id[3] = {a.index, b.index, c.index};
     std::sort(id, id + 3);
 
+    //Verifica a ordem lexicografica entre os novos e antigos indices
     bool firstLexicographical = (
-        (id[0] < this->t1) || 
+        (id[0] < this->t1) ||
         (id[0] == this->t1 && id[1] < this->t2) || 
         (id[0] == this->t1 && id[1] == this->t2 && id[2] < this->t3)
     );
     
+    //Se o novo for menor ou igual e lexicograficamente menor, vira o novo menor
     if(p < this->perim || (firstLexicographical && std::abs(p - this->perim) < 1e-9)){
         this->perim = p;
         this->t1 = id[0];
@@ -22,6 +25,7 @@ void Result::update(Point a, Point b, Point c, double p){
 
 }
 
+//Construtor padrao, recebe o numero de pontos e pega eles
 TreeSelector::TreeSelector(int z) : _z(z){
     this->_trees = std::vector<Point>(z);
 
@@ -34,9 +38,12 @@ TreeSelector::TreeSelector(int z) : _z(z){
     }
 }
 
+//Destrutor padrao
 TreeSelector::~TreeSelector(){}
 
+//Funcao iterativa que retorna o resultado do triangulo de menor lado em um vetor de pontos
 Result TreeSelector::smallestPerim(std::vector<Point>& Px, int l, int r){
+    //Calcula o tamanho do vetor
     int size = r - l + 1;
     Result result;
 
@@ -45,11 +52,13 @@ Result TreeSelector::smallestPerim(std::vector<Point>& Px, int l, int r){
         for(int i = l; i <= r; i++){
             for(int j = i + 1; j <= r; j++){
                 for(int k = j + 1; k <= r; k++){
+                    //Testa cada triangulo no caso base, 10 testes no máximo (5 X 4 X 3) / (3 X 2)
                     double p = perimeter(Px[i], Px[j], Px[k]);
                     if(p <= result.perim) result.update(Px[i], Px[j], Px[k], p);
                 }
             }
         }
+        //Retorna o resultado otimo
         return result;
     }
 
@@ -61,28 +70,29 @@ Result TreeSelector::smallestPerim(std::vector<Point>& Px, int l, int r){
     Result rightResult = smallestPerim(Px, mid + 1, r);
 
     //Pega o menor perimetro entre as duas partes
+
+    //Confere a ordem lexicografica
     bool leftFirstLexic = (
         (leftResult.t1 < rightResult.t1) || 
         (leftResult.t1 == rightResult.t1 && leftResult.t2 < rightResult.t2) || 
         (leftResult.t1 == rightResult.t1 && leftResult.t2 == rightResult.t2 && leftResult.t3 < rightResult.t3)
     );
 
+    //Pega o melhor resultado
     if(leftResult.perim < rightResult.perim) result = leftResult;
     else if(leftResult.perim > rightResult.perim) result = rightResult;
     else if(leftFirstLexic) result = leftResult;
     else result = rightResult;
 
-    //Conquista: Resta comparar com os trios que "cruzam" as duas divisoes, ou seja, que tem arvores antes e depois do limiar de X
+    //Conquista: Resta comparar com os trios que "cruzam" as duas divisoes, ou seja, que tem arvores antes e depois da mediana de X
     double perim = result.perim;
 
-    //Agora devemos lidar com o caso de triangulos que cruzam o X mediano. Ou seja, que tem 2 pontos de um lado ou de outro
     //Sabemos o melhor perimetro ate agora, fica evidente que qualquer ponto a uma distancia do X mediano de mais de (perim / 2) nao vai participar desse triangulo
     //Entao devemos limitar o range em que os pontos serao comparados
-
     std::vector<Point> rangeTrees;
     for(int i = l; i <= r; i++) if(std::abs(Px[i].x - median.x) < perim / 2.0) rangeTrees.push_back(Px[i]);
 
-    //Ordena em relacao a Y
+    //Ordena em relacao a Y, isso vai evitar o custo cubico
     std::sort(rangeTrees.begin(), rangeTrees.end(), [](const Point& a, const Point& b){
         return a.y < b.y;
     });
@@ -90,10 +100,14 @@ Result TreeSelector::smallestPerim(std::vector<Point>& Px, int l, int r){
     //Verificar os triangulos dentro do range
     for(size_t i = 0; i < rangeTrees.size(); i++){
         for(size_t j = i + 1; j < rangeTrees.size(); j++){
-            //Se a distancia entre 2 pontos ja for maior do que "range" pela metade, ja deve ser descartado
+            //Se a diferenca em Y entre 2 pontos ja for maior do que "range" pela metade, o ponto i nao vai achar nenhum perimetro menor
             if(rangeTrees[j].y - rangeTrees[i].y >= perim / 2.0) break;
             for(size_t k = j + 1; k < rangeTrees.size(); k++){
+                //Ao escolher um par
+                //Se a diferenca em Y entre o mais distante do par e um terceiro ponto for maior que o "range" pela metade, este par nao vai achar um perimetro menor
                 if(rangeTrees[k].y - rangeTrees[i].y >= perim / 2.0) break;
+
+                //Testa o triangulo
                 double p = perimeter(rangeTrees[i], rangeTrees[j], rangeTrees[k]);
                 result.update(rangeTrees[i], rangeTrees[j], rangeTrees[k], p);
                 perim = result.perim;
@@ -101,10 +115,13 @@ Result TreeSelector::smallestPerim(std::vector<Point>& Px, int l, int r){
         }
     }
 
+    //Retorna o melhor resultado
     return result;
 }
 
+//Roda o algoritmo de encontrar o triangulo de menor perimetro
 void TreeSelector::Run(){
+    //Caso tenha menos que 3 pontos, nao ha triangulo
     if(this->_z < 3) return;
 
     //Ordena as arvores em relacao a cordenada no X.
@@ -112,8 +129,10 @@ void TreeSelector::Run(){
         return a.x < b.x;
     });
 
-    //Primeira chamada para a divisao e conquista
+    //Primeira chamada para a divisao e conquista, com o vetor inteiro
     this->_resultado =  smallestPerim(this->_trees, 0, this->_z - 1);
+
+    //Imprime conforme especificado no enunciado
     std::cout << std::fixed << std::setprecision(4);
     std::cout << "Parte 2: " << this->_resultado.perim << " " << this->_resultado.t1 << " " << this->_resultado.t2 << " " << this->_resultado.t3 << "\n";
 }

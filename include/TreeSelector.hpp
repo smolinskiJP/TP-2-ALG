@@ -7,14 +7,17 @@
 #include <iomanip>
 #include <algorithm> //Apenas usando a funcao sort, como permitido
 
+//Constante para representar o maior double possivel
 const double INF = 1e308;
 
+//Estrutura usada para combinar as informações de um ponto, coordenadas X, Y e index
 struct Point{
     int index;
     int x;
     int y;
 };
 
+//Estrutura que combina as informacoes de um perimetro, o valor e os indices dos pontos
 struct Result{
     double perim;
     int t1;
