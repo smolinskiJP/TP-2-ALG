@@ -97,7 +97,7 @@ Result TreeSelector::smallestPerim(std::vector<Point>& Px, std::vector<Point>& P
     //Verificar os triangulos dentro do range
     for(size_t i = 0; i < rangeTrees.size(); i++){
         for(size_t j = i + 1; j < rangeTrees.size(); j++){
-            //Se a distancia entre 2 pontos ja for maior do que "range" pela metade, ja deve ser descartado
+            //Se a diferenca vertical ja for maior do que "range" pela metade, o ponto i vai ser descartado para testes (ja que todos os proximos terao distancia em y ainda maior)
             if(rangeTrees[j].y - rangeTrees[i].y >= perim / 2.0) break;
             for(size_t k = j + 1; k < rangeTrees.size(); k++){
                 if(rangeTrees[k].y - rangeTrees[i].y >= perim / 2.0) break;
