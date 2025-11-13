@@ -15,32 +15,24 @@ Wall::~Wall(){}
 
 void Wall::Run(){
 
-    //Vetor que para cada ponto representa o maior triangulo retangulo que pode ser feito a esquerda do ponto
-    std::vector<int> leftTriangle(this->_n);
-
-    //Vetor que para cada ponto representa o maior triangulo retangulo que pode ser feito a direita do ponto
-    std::vector<int> rightTriangle(this->_n);
-
     //O ponto mais a esquerda vai ser  iniciado como 1, pois vai ser o maior tamanho do triangulo a esquerda (tamanho maximo da pilha = 1)
-    leftTriangle[0] = 1;
-    
-    //O ponto mais a direita vai ser iniciado como 1, pois vai ser o maior tamanho do triangulo a direita (tamanho maximo da pilha = 1)
-    rightTriangle[this->_n - 1] = 1;
+    this->_heights[0] = 1;
 
     for(int i = 1; i < this->_n; i++) {
         //Para cada pilha, a altura do triangulo a esquerda por padrao vai ser a do triangulo a esquerda da pilha a esquerda mais 1.
         //Caso a altura da pilha nao seja maior ou igual a esse valor, a propria altura da pilha vai ser o limitante do traingulo
-        leftTriangle[i] = min(leftTriangle[i - 1] + 1, this->_heights[i]);
-
-        //Uma logica semelhante mas invertida a de cima vale para a pilha a direita
-        rightTriangle[this->_n - (i + 1)] = min(rightTriangle[this->_n - i] + 1, this->_heights[this->_n - (i + 1)]);
+        this->_heights[i] = min(this->_heights[i - 1] + 1, this->_heights[i]);
     }
 
-    //Inicia com a menor altura sendo 0. Ja que nao ter pilhas vai ser como ter um triangulo de tamanho 0
-    int maxHeight = 0;
-    //Apos isso, para cada pilha verificamos qual o maior triangulo que pode ser gerado com ela, sendo esse o menor entre seus dois triangulos retangulos laterais
-    //Se esse valor for a maior altura encontrada ate agora, a maior altura vai ser atualizada
-    for(int i = 0; i < this->_n; i++) maxHeight = max(maxHeight, min(leftTriangle[i], rightTriangle[i]));
+    //O ponto mais a direita vai ter altura maxima 1 tambem
+    this->_heights[this->_n - 1] = 1;
+
+    //Inicia com a menor altura sendo 1, ja que os extremos nao serao verificados na proxima etapa (por terem maximo de tamanho 1)
+    int maxHeight = 1;
+    for(int i = this->_n - 2; i >= 1; i--){
+        this->_heights[i] = min(this->_heights[i + 1] + 1, this->_heights[i]);
+        maxHeight = max(maxHeight, this->_heights[i]);
+    }
 
     //Saida como pede o enunciado
     std::cout << "Parte 1: " << maxHeight << "\n";
